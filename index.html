@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>happynewyear</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #ffd6e8, #fff0f6);
+      font-family: "Comic Sans MS", "Poppins", sans-serif;
+    }
+
+    .card {
+      background: white;
+      padding: 40px 50px;
+      border-radius: 24px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      max-width: 420px;
+      position: relative;
+      z-index: 1; /* keep card below the global danger overlay */
+    }
+
+    .card h1 {
+      color: #ff4d88;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+
+    .card p {
+      color: #555;
+      font-size: 16px;
+      margin-bottom: 30px;
+    }
+
+    .buttons {
+      position: relative;
+      height: 80px;
+    }
+
+    button {
+      border: none;
+      padding: 14px 28px;
+      border-radius: 999px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: absolute;
+    }
+
+    #yes {
+      background: #ff4d88;
+      color: white;
+      left: 50%;
+      transform: translateX(-120%);
+      z-index: 2; /* luôn nằm trên */
+    }
+
+    #yes:hover {
+      background: #ff2f73;
+      transform: translateX(-120%) scale(1.1);
+    }
+
+    #no {
+      background: #e0e0e0;
+      color: #333;
+      left: 50%;
+      transform: translateX(20%);
+      z-index: 1; /* luôn dưới nút đồng ý */
+    }
+
+    .result {
+      margin-top: 25px;
+      font-size: 20px;
+      color: #ff4d88;
+      display: none;
+    }
+
+    .result-img {
+      margin-top: 15px;
+      width: 200px;
+      border-radius: 16px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+    /* Responsive rules */
+    @media (max-width: 600px) {
+      .card { padding: 20px 18px; max-width: 92%; }
+      .card h1 { font-size: 20px; }
+      .card p { font-size: 14px; }
+      .buttons { position: static; display: flex; gap: 10px; justify-content: center; height: auto; margin-top: 8px; }
+      button { position: relative; transform: none; left: auto; top: auto; padding: 10px 16px; font-size: 15px; }
+      #yes { transform: none; }
+      #no { transform: none; }
+      .result-img { width: 140px; }
+      .danger-text { font-size: 1.6rem; padding: 20px 28px; border-radius: 20px; border-width: 4px; }
+    }
+    .run-away {
+      animation: run-away-anim 0.4s cubic-bezier(.7,-0.2,.7,1.5);
+    }
+    .run-away-off {
+      animation: run-away-off-anim 0.8s cubic-bezier(.7,-0.2,.7,1.5) forwards;
+      pointer-events: none;
+    }
+    @keyframes run-away-anim {
+      0% {
+        transform: scale(1) rotate(0deg);
+        filter: drop-shadow(0 0 0 #ff4d88);
+      }
+      30% {
+        transform: scale(1.1,0.9) rotate(-10deg) translateY(-8px);
+        filter: drop-shadow(0 8px 8px #ff4d88aa);
+      }
+      60% {
+        transform: scale(1.2,0.8) rotate(10deg) translateY(10px);
+        filter: drop-shadow(0 16px 12px #ff4d88aa);
+      }
+      100% {
+        transform: scale(1) rotate(0deg);
+        filter: drop-shadow(0 0 0 #ff4d88);
+      }
+    }
+    @keyframes run-away-off-anim {
+      0% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+      }
+      60% {
+        opacity: 1;
+        transform: scale(1.2,0.8) rotate(30deg) translateY(-20px);
+      }
+      100% {
+        opacity: 0;
+        /* Chạy random ra ngoài màn hình */
+        /* translateX/translateY sẽ được set inline qua JS */
+      }
+    }
+    .no-msg {
+      color: #ff4d88;
+      font-size: 16px;
+      margin-top: 8px;
+      min-height: 22px;
+      font-style: italic;
+      transition: opacity 0.2s;
+      opacity: 0;
+      pointer-events: none;
+      user-select: none;
+    }
+    .no-msg.active {
+      opacity: 1;
+    }
+    .no-msg.big-warning {
+      /* Ẩn vị trí cũ */
+      opacity: 0;
+    }
+    .danger-overlay {
+      position: absolute;
+      inset: 0;                     /* cover the entire .card */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;                 /* above card content */
+      pointer-events: none;
+      animation: danger-fade-in 0.2s;
+    }
+    .danger-text {
+      font-size: 4rem;
+      font-weight: bold;
+      color: #fff;
+      padding: 0px 9px;
+      background: rgba(255, 0, 64, 0.92);
+      border-radius: 48px;
+      box-shadow: 0 0 120px 40px #ff0033cc, 0 0 0 12px #fff2;
+      text-shadow: 0 0 32px #fff, 0 0 48px #ff0033, 0 0 12px #fff;
+      opacity: 0.97;
+      letter-spacing: 3px;
+      animation: danger-pulse 1.2s cubic-bezier(.7,-0.2,.7,1.5) 2;
+      border: 6px solid #fff;
+      filter: blur(0.2px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      position: relative;
+      left: 0;
+      top: 0;
+      margin: 0;
+    }
+    @keyframes danger-fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes danger-pulse {
+      0% { transform: scale(1) rotate(-2deg); box-shadow: 0 0 80px 20px #ff0033cc; }
+      30% { transform: scale(1.08) rotate(2deg); box-shadow: 0 0 120px 40px #ff0033ee; }
+      60% { transform: scale(1.12) rotate(-3deg); box-shadow: 0 0 160px 60px #ff0033ff; }
+      100% { transform: scale(1) rotate(0deg); box-shadow: 0 0 80px 20px #ff0033cc; }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Trân 31/12 này đi xem pháo bông với tớ nhaaa </h1>
+    <br>
+
+    <div class="buttons">
+      <button id="yes">Đồng ý 💖</button>
+      <button id="no">Từ chối 😞</button>
+      <div class="no-msg" id="no-msg">Ai mà lại từ chối</div>
+    </div>
+
+    <div class="result" id="result">
+      🎉 Oke cảm ưn cốt, 8h túi nhoaaaa🥰<br/>
+      <img src="https://media.giphy.com/media/MDJ9IbxxvDUQM/giphy.gif" alt="happy" class="result-img" />
+    </div>
+    <!-- danger overlay moved inside .card so it always sits above this card -->
+    <div id="danger-overlay" style="display:none"></div>
+    <!-- background music -->
+    <audio id="bg-audio" src="nhac.mp3" autoplay loop playsinline></audio>
+  </div>
+ 
+  <script>
+    const noBtn = document.getElementById("no");
+    const yesBtn = document.getElementById("yes");
+    const result = document.getElementById("result");
+    const buttons = document.querySelector(".buttons");
+    const noMsg = document.getElementById("no-msg");
+
+    let hasRunOff = false;
+    const dangerOverlay = document.getElementById("danger-overlay");
+
+    function showDangerOverlay() {
+      dangerOverlay.innerHTML = `<div class="danger-text">⚠️ Ai mà lại từ chối vậy!!!</div>`;
+      dangerOverlay.style.display = "flex";
+      setTimeout(() => {
+        dangerOverlay.style.display = "none";
+      }, 1800);
+    }
+
+    function showNoMsg(big = false) {
+      if (big) {
+        noMsg.textContent = "⚠️ Ai mà lại từ chối vậy!!!";
+        noMsg.classList.add("big-warning");
+        showDangerOverlay();
+        setTimeout(() => noMsg.classList.remove("big-warning"), 1800);
+      } else {
+        noMsg.textContent = "Ai mà chọn từ chối";
+        noMsg.classList.add("active");
+        setTimeout(() => noMsg.classList.remove("active"), 1200);
+      }
+    }
+
+    function moveNoButton(e) {
+      if (hasRunOff) return;
+
+      // Lần đầu tiên rê chuột hoặc click là chạy random ra ngoài màn hình luôn
+      hasRunOff = true;
+      noBtn.classList.remove("run-away");
+
+      // lưu vị trí hiện tại của nút "Từ chối" trong container (.buttons)
+      const originLeft = noBtn.offsetLeft;
+      const originTop = noBtn.offsetTop;
+
+      // Tính hướng random ra ngoài màn hình
+      const directions = [
+        { x: 1, y: -1 }, // phải trên
+        { x: 1, y: 0 },  // phải
+        { x: 1, y: 1 },  // phải dưới
+        { x: -1, y: -1 },// trái trên
+        { x: -1, y: 0 }, // trái
+        { x: -1, y: 1 }, // trái dưới
+        { x: 0, y: -1 }, // lên
+        { x: 0, y: 1 },  // xuống
+      ];
+      const dir = directions[Math.floor(Math.random() * directions.length)];
+      // Khoảng cách di chuyển lớn để chắc chắn ra ngoài
+      const dx = dir.x * (window.innerWidth + 400);
+      const dy = dir.y * (window.innerHeight + 200);
+
+      noBtn.style.transition = "none";
+      noBtn.style.transform = `translate(${dx}px, ${dy}px) rotate(720deg) scale(1.2,0.8)`;
+      void noBtn.offsetWidth; // force reflow
+      noBtn.classList.add("run-away-off");
+
+      showNoMsg(true);
+      setTimeout(() => {
+        noBtn.style.display = "none";
+
+        // sau 5s tạo nút "Đồng ý" mới ngay vị trí cũ của nút "Từ chối"
+        setTimeout(() => {
+          // clone nút yes, đổi id và đặt vị trí tùy theo viewport
+          const newYes = yesBtn.cloneNode(true);
+          newYes.id = "yes2";
+          newYes.disabled = false;
+          newYes.style.opacity = "0";
+          newYes.style.transition = "all 0.3s ease, opacity 0.6s ease";
+
+          const isMobile = window.innerWidth <= 600;
+          if (isMobile) {
+            // trên mobile đặt theo flow (relative)
+            newYes.style.position = "relative";
+            newYes.style.left = "";
+            newYes.style.top = "";
+            // thêm vào cuối .buttons (flex layout)
+            buttons.appendChild(newYes);
+          } else {
+            // desktop: đặt tuyệt đối tại vị trí cũ
+            newYes.style.position = "absolute";
+            newYes.style.left = originLeft + "px";
+            newYes.style.top = originTop + "px";
+            newYes.style.transform = ""; // đảm bảo không dùng translateX của nút gốc
+            buttons.appendChild(newYes);
+          }
+          // hiện mờ -> rõ
+          requestAnimationFrame(() => { newYes.style.opacity = "1"; });
+          // xử lý click giống nút yes ban đầu
+          newYes.addEventListener("click", () => {
+            result.style.display = "block";
+            newYes.disabled = true;
+            yesBtn.disabled = true;
+            noMsg.style.display = "none";
+            noBtn.style.display = "none";
+          });
+        }, 5000);
+
+      }, 800);
+    }
+
+    noBtn.addEventListener("mouseenter", moveNoButton, { once: true });
+    noBtn.addEventListener("click", moveNoButton, { once: true });
+
+    yesBtn.addEventListener("click", () => {
+      result.style.display = "block";
+      yesBtn.disabled = true;
+      noBtn.style.display = "none";
+      noMsg.style.display = "none";
+      dangerOverlay.style.display = "none";
+    });
+
+    // background audio autoplay with fallback on first user interaction
+    (function(){
+      const bgAudio = document.getElementById("bg-audio");
+      if (!bgAudio) return;
+      const tryPlay = () => {
+        const p = bgAudio.play();
+        if (p !== undefined) {
+          p.catch(() => {
+            // autoplay blocked -> play on next user interaction
+            const start = () => { bgAudio.play().catch(()=>{}); window.removeEventListener("click", start); };
+            window.addEventListener("click", start, { once: true });
+          });
+        }
+      };
+      // try immediately and also after a short delay
+      tryPlay();
+      setTimeout(tryPlay, 500);
+    })();
+  </script>
+</body>
+</html>
