@@ -51,6 +51,7 @@
       cursor: pointer;
       transition: all 0.2s ease;
       position: absolute;
+      min-width: 84px;
     }
 
     #yes {
@@ -86,6 +87,7 @@
       width: 200px;
       border-radius: 16px;
       box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+      max-width: 100%;
     }
     /* Responsive rules */
     @media (max-width: 600px) {
@@ -166,29 +168,35 @@
       z-index: 999;                 /* above card content */
       pointer-events: none;
       animation: danger-fade-in 0.2s;
+      padding: 8px;                 /* keep some breathing room on small screens */
     }
     .danger-text {
-      font-size: 4rem;
-      font-weight: bold;
+      /* responsive sizes: min 1.2rem, ideal 6vw, max 4rem */
+      font-size: clamp(1.2rem, 6vw, 4rem);
+      font-weight: 800;
       color: #fff;
-      padding: 0px 9px;
+      padding: clamp(10px, 2.5vw, 48px) clamp(12px, 3vw, 64px);
       background: rgba(255, 0, 64, 0.92);
-      border-radius: 48px;
-      box-shadow: 0 0 120px 40px #ff0033cc, 0 0 0 12px #fff2;
-      text-shadow: 0 0 32px #fff, 0 0 48px #ff0033, 0 0 12px #fff;
-      opacity: 0.97;
-      letter-spacing: 3px;
+      border-radius: clamp(12px, 4vw, 48px);
+      box-shadow: 0 0 calc(20px + 2vw) rgba(255,0,51,0.55);
+      text-shadow: 0 0 calc(6px + 0.8vw) #fff;
+      opacity: 0.98;
+      letter-spacing: 0.04em;
       animation: danger-pulse 1.2s cubic-bezier(.7,-0.2,.7,1.5) 2;
-      border: 6px solid #fff;
-      filter: blur(0.2px);
+      border: clamp(2px, 0.6vw, 6px) solid #fff;
       display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
-      position: relative;
-      left: 0;
-      top: 0;
+      max-width: 92%;
+      box-sizing: border-box;
       margin: 0;
+      transform-origin: center;
+      /* subtle scale down on very narrow cards */
+      transform: scale(min(1, calc( (100% / (max(300px, 92%))) )));
+    }
+    @media (max-width: 360px) {
+      .danger-text { padding: 10px 12px; letter-spacing: 0.02em; }
     }
     @keyframes danger-fade-in {
       from { opacity: 0; }
